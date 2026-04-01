@@ -1,0 +1,20 @@
+{
+    "model_architecture": {
+        "n_decoders": 6,
+        "d_model": 2048,
+        "n_heads": 8,
+        "d_hidden": 4096,
+        "n_experts": 16,
+        "top_k": 8,
+        "device": "cuda"
+    },
+    "training_parameters": {
+        "batch_size": 8,
+        "epochs": 10,
+        "learning_rate": 1e-4,
+        "hf_key": "hf_key",
+        "hf_model_id": "amaury-delille/tana",
+        "hf_dataset_id": "manu/wikisource_fr",
+        "hf_dataset_split": "train"
+    }
+}
