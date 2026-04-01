@@ -1,0 +1,5 @@
+torch
+datasets
+safetensors
+transformers
+huggingface-hub
