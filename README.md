@@ -10,7 +10,7 @@ Tana was trained on the following constants:
 - $n_{experts} = 16$
 - $top_k = 8$
 - $vocab\_size = 50000$
-- $device = "mps"
+- device = "mps"
 
 You can train Tana on your own dataset using the following command:
 ```bash
