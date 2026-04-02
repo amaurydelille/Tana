@@ -59,7 +59,7 @@ class TanaDataset(IterableDataset):
         ds = load_dataset(
             dataset_id,
             dataset_config,
-            split=dataset_split,
+            split=f"{dataset_split}[:500000]",
             streaming=True,
         )
 
