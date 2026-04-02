@@ -3,7 +3,7 @@ import torch
 import torch.optim as optim
 from torch.utils.data.dataloader import DataLoader
 import torch.nn as nn
-from torch.utils.data import Dataset
+from torch.utils.data import IterableDataset
 from datasets import load_dataset
 from typing import Optional, Literal
 import csv
@@ -38,7 +38,7 @@ def collate_lm_batch(batch: list[str]) -> tuple[torch.Tensor, torch.Tensor]:
     labels[labels == TOKENIZER.pad_token_id] = -100
     return input_ids, labels
 
-class TanaDataset(Dataset):
+class TanaDataset(IterableDataset):
     def __init__(
         self,
         dataset_id: str,
@@ -60,11 +60,11 @@ class TanaDataset(Dataset):
             streaming=True,
         )
 
-    def __len__(self) -> int:
-        return len(self.dataset)
-    
-    def __getitem__(self, idx: int) -> str:
-        return self.dataset[idx]["text"]
+    def __iter__(self):
+        for sample in self.dataset:
+            text = sample.get("text")
+            if text is not None:
+                yield text
 
 class CSVLogger:
     def __init__(self, csv_file: str) -> None:
@@ -143,11 +143,13 @@ class Trainer:
         finally:
             os.unlink(path)
 
-    def _train_epoch(self) -> None:
+    def _train_epoch(self) -> float:
         self.model.train()
         total_loss = 0.0
+        batch_count = 0
 
         for batch_idx, (data, target) in enumerate(self.train_dataloader):
+            batch_count += 1
             
             with torch.autocast(device_type=self.device, dtype=torch.float16, enabled=True):
                 data, target = data.to(self.device), target.to(self.device)
@@ -180,7 +182,7 @@ class Trainer:
             metrics = self.csv_logger.compute_metrics(batch_idx, loss, auxiliary_loss, gradient_norm, gradient_variance, learning_rate)
             self.csv_logger.csv_logger(metrics)
 
-        return total_loss / len(self.train_dataloader)
+        return total_loss / batch_count if batch_count > 0 else 0.0
 
     def train(self) -> None:
         try:

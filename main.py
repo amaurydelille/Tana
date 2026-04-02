@@ -3,6 +3,7 @@ import json
 
 from huggingface_hub import HfApi
 from torch.utils.data.dataloader import DataLoader
+from torch.utils.data import IterableDataset as TorchIterableDataset
 from tana_modeling import Tana, TOKENIZER
 from trainer import Trainer, TanaDataset, VOCAB_SIZE, collate_lm_batch
 
@@ -41,12 +42,13 @@ def main() -> None:
         dataset_split=training_parameters.get("hf_dataset_split"),
     )
 
-
     num_workers = training_parameters.get("num_workers", 2)
+    if isinstance(train_dataset, TorchIterableDataset):
+        num_workers = 0
     data_loader = DataLoader(
         dataset=train_dataset,
         batch_size=training_parameters["batch_size"],
-        shuffle=True,
+        shuffle=False,
         num_workers=num_workers,
         persistent_workers=num_workers > 0,
         pin_memory=True,
