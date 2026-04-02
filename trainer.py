@@ -136,6 +136,7 @@ class Trainer:
         )
 
     def _save_and_upload_safetensors(self) -> None:
+        torch.cuda.empty_cache()
         checkpoint_dir = os.path.join(os.getcwd(), "deepspeed_ckpt_merge")
         os.makedirs(checkpoint_dir, exist_ok=True)
         tag = "hf_upload"

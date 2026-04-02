@@ -1,4 +1,4 @@
-# TANA-LLM
+# Tana-8B
 ![alt text](asset.png)
 
 ## Training
