@@ -11,6 +11,7 @@
       "stage3_prefetch_bucket_size": 5e7,
       "stage3_param_persistence_threshold": 1e5
     },
+    "zero_force_ds_cpu_optimizer": false,
     "gradient_accumulation_steps": 4,
     "train_micro_batch_size_per_gpu": 1,
     "steps_per_print": 10
