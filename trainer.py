@@ -59,9 +59,9 @@ class TanaDataset(IterableDataset):
         ds = load_dataset(
             dataset_id,
             dataset_config,
-            split=f"{dataset_split}[:500000]",
+            split=dataset_split,
             streaming=True,
-        )
+        ).take(1000000)
 
         if world_size > 1:
             ds = ds.shard(num_shards=world_size, index=rank)
