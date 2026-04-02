@@ -188,13 +188,14 @@ class Trainer:
             self._log(f"[epoch {epoch} | step {batch_idx}] batch loaded, shape={list(data.shape)} — running forward...")
             data = data.to(self.device)
             target = target.to(self.device)
-            logits, auxiliary_loss = self.model_engine(data)
-            shift_logits = logits[:, :-1, :].contiguous()
-            shift_labels = target[:, 1:].contiguous()
-            loss = self.criterion(
-                shift_logits.view(-1, shift_logits.size(-1)),
-                shift_labels.view(-1),
-            ) + auxiliary_loss
+            with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+                logits, auxiliary_loss = self.model_engine(data)
+                shift_logits = logits[:, :-1, :].contiguous()
+                shift_labels = target[:, 1:].contiguous()
+                loss = self.criterion(
+                    shift_logits.view(-1, shift_logits.size(-1)),
+                    shift_labels.view(-1),
+                ) + auxiliary_loss
             if self.distributed:
                 self.model_engine.backward(loss)
                 self.model_engine.step()

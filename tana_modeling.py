@@ -171,37 +171,34 @@ class MixtureOfExperts(nn.Module):
         return output, auxiliary_loss
 
 class Decoder(nn.Module):
-    def __init__(self, d_model: int, n_heads: int, d_hidden: int, n_experts: int, top_k: int, vocab_size: int, device: Literal["cpu", "cuda", "mps"]) -> None:
+    def __init__(self, d_model: int, n_heads: int, d_hidden: int, n_experts: int, top_k: int, device: Literal["cpu", "cuda", "mps"]) -> None:
         super().__init__()
         self.d_model = d_model
-        self.vocab_size = vocab_size
-        self.embeddings = nn.Embedding(vocab_size, d_model, device=device)
         self.pre_norm = nn.LayerNorm(d_model)
         self.norm = nn.LayerNorm(d_model)
         self.attention = MultiHeadSelfAttention(d_model, n_heads, device=device)
         self.experts = MixtureOfExperts(d_model, d_hidden, n_experts, top_k)
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        if x.dtype in (torch.long, torch.int32, torch.int64):
-            x = self.embeddings(x)
         x = x.to(self.pre_norm.weight.dtype)
         residual = x
-        pre_norm = self.pre_norm(x.to(self.pre_norm.weight.dtype)).to(x.dtype)
+        pre_norm = self.pre_norm(x)
         attention_output = self.attention(pre_norm) + residual
-        norm_output = self.norm(attention_output.to(self.norm.weight.dtype)).to(attention_output.dtype)
+        norm_output = self.norm(attention_output)
         experts_output, auxiliary_loss = self.experts(norm_output)
-
         return experts_output, auxiliary_loss
 
 class Tana(nn.Module):
     def __init__(self, n_decoders: int, d_model: int, n_heads: int, d_hidden: int, n_experts: int, top_k: int, vocab_size: int, device: Literal["cpu", "cuda", "mps"]) -> None:
         super().__init__()
+        self.embeddings = nn.Embedding(vocab_size, d_model, device=device)
         self.decoders = nn.ModuleList([
-            Decoder(d_model, n_heads, d_hidden, n_experts, top_k, vocab_size, device) for _ in range(n_decoders)
+            Decoder(d_model, n_heads, d_hidden, n_experts, top_k, device) for _ in range(n_decoders)
         ])
         self.lm_head = nn.Linear(d_model, vocab_size, device=device, bias=False)
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        x = self.embeddings(x)
         total_aux = torch.tensor(0.0, device=x.device, dtype=torch.float32)
         for decoder in self.decoders:
             x, aux = decoder(x)
