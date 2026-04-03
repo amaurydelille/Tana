@@ -14,7 +14,7 @@ Tana was trained on the following constants:
 
 You can train Tana on your own dataset using the following command:
 ```bash
-python main.py --config <your_config_file.json>
+python main.py --config <your_config_file.json> --no-distributed
 ```
 
 Tana also supports DeepSpeed for distributed training. To use DeepSpeed, you can run the following command:
